@@ -41,7 +41,6 @@ class DataPull:
         base = "https://api.census.gov/data/"
         # flow = "/acs/acs1/pums"
         url = f"{base}{year}{flow}?get={param}&for={region}"
-        print(url)
         df = pl.DataFrame(requests.get(url).json())
 
         # get names from DataFrame
@@ -54,7 +53,7 @@ class DataPull:
         return df.rename(names).with_columns(year=pl.lit(year))
 
     def pull_dp03(self, flow:str, region:str, params:list) -> pl.DataFrame:
-        for _year in range(2020, datetime.now().year):
+        for _year in range(2014, datetime.now().year):
             try:
                 logging.info(f"pulling {_year} data")
                 df = self.pull_query(
@@ -63,14 +62,14 @@ class DataPull:
                     params=params,
                     year=_year,
                 )
-                df = df.with_columns(
-                    geoid=pl.col("state") + pl.col("county") + pl.col("county subdivision")
-                ).drop(["state", "county", "county subdivision"])
-                df = df.with_columns(pl.all().exclude("geoid").cast(pl.Int64))
+                # df = df.with_columns(
+                #     geoid=pl.col("state") + pl.col("county") + pl.col("county subdivision")
+                # ).drop(["state", "county", "county subdivision"])
+                # df = df.with_columns(pl.all().exclude("geoid").cast(pl.Int64))
 
                 # Register tmp as a DuckDB view
-                self.conn.register("df", df)
-                print(df.count())
+                # self.conn.register("df", df)
+                # print(df.count())
 
                 # Create table only once
                 if "DP03Table" not in self.conn.sql("SHOW TABLES;").df().get("name").tolist():
